@@ -53,7 +53,10 @@
 </template>
 
 <script>
+import axios from 'axios'
+import swal from 'sweetalert'
 export default {
+  props: ["baseURL", "order"],
   data() {
     return {
       items: this.$store.state.carts,
@@ -63,10 +66,21 @@ export default {
   name: "Checkout",
   methods: {
     payment() {
-      this.$router.push({
-        name: "Payment",
-      });
-    },
+      axios
+        .put(`${this.baseURL}cart/${this.order.id}`, {
+          paid: true
+        })
+        .then((res) => {
+          if (res.status == 200) {
+            swal({
+          icon: "success",
+          text: "payment success"
+        })
+          window.location.reload();
+      }
+    })
+    this.$store.state.cards = [];
+  },
     goToCart(){
       this.$router.push({ name: 'Cart'})
     },

@@ -107,7 +107,7 @@ export default {
         paid: true,
       }).then((res) => {
           if (res.status == 200) {
-            this.checkSubmit = true;
+            window.location.reload();
           }
         });
       
@@ -117,8 +117,11 @@ export default {
         items: this.items,
         total: this.totalCost,
         paid: false,
-      });
-      this.checkSubmit = true;
+      }).then((res) => {
+          if (res.status == 200) {
+            this.checkSubmit = true;
+          }
+        });
     },
   },
 };

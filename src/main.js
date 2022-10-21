@@ -8,6 +8,7 @@ const store = createStore({
   state() {
     return {
       carts: [],
+      order: []
     };
   },
   getters:{
@@ -26,6 +27,9 @@ const store = createStore({
       } else {
         state.carts.push(item);
       }
+    },
+    addToCart2(state,item) {
+      state.carts.push(...item);
     },
     deleteItem(state,item) {
       let index = state.carts.indexOf(item);

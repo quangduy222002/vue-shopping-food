@@ -25,7 +25,7 @@
           </h6>
 
           <p class="mb-0 font-weight-bold" id="item-price">
-            $ {{ cartItem.price }} per unit
+            $ {{ cartItem.price }}
           </p>
           <p class="mb-0" style="float:left">
             Quantity:{{ cartItem.quantity }}
@@ -54,17 +54,38 @@
   </div>
 </template>
 <script>
+import axios from 'axios'
 import swal from 'sweetalert'
 export default {
   data() {
     return {
+      isLoading: false,
       cartItems: this.$store.state.carts,
     };
   },
-  props: ["baseURL"],
+  props: ["baseURL","order"],
   methods: {
     deleteItem(item){
+      this.isLoading=true
       this.$store.commit('deleteItem', item);
+      if(this.isLoading){
+        swal({
+          icon: "info",
+          text: "Loading",
+          button: false
+        })
+        axios.put(`${this.baseURL}cart/${this.order.id}`, {
+        items: this.$store.state.carts,
+        total: this.$store.getters.totalCost,
+      }).then((res) => {
+          if (res.status == 200) {
+            swal({
+          icon: "success",
+          text: "delete sucess"
+        })
+          }
+        });
+      }
     },
     checkout() {
       if(this.cartItems.length==0){

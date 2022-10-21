@@ -21,8 +21,6 @@
               class="btn"
               type="button"
               id="add-to-cart-button"
-              data-toggle="modal"
-              data-target="#addToCart"
               @click="addToCart"
             >
               Add to Cart
@@ -40,64 +38,27 @@
       </div>
     </div>
   </div>
-
-  <!-- modal -->
-  <div
-    class="modal fade"
-    id="addToCart"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="addToCartLabel"
-    aria-hidden="true"
-    v-if="product.length > 0"
-  >
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addToCartLabel">Add To Cart</h5>
-          <button
-            type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-label="Close"
-          >
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">{{ product[0].name }} add to cart sucess</div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            @click="continueShopping"
-            data-dismiss="modal"
-          >
-            Continue shopping
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            @click="goToCart"
-            data-dismiss="modal"
-          >
-            Go to cart
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 <script>
-// import axios from 'axios'
+import axios from "axios";
+import swal from "sweetalert";
 export default {
   data() {
     return {
+      isLoading: false,
       id: this.$route.params.id,
       product: [],
-      quantity: 1,
+      quantity: {
+        type: Number,
+        default: 0,
+        require: true,
+        validator: (value) => {
+          return value > 0
+        }
+      },
     };
   },
-  props: ["baseURL", "products"],
+  props: ["baseURL", "products", "order"],
   methods: {
     findProduct(id) {
       const temp = this.products.filter((product) => {
@@ -106,6 +67,7 @@ export default {
       this.product = temp;
     },
     addToCart() {
+      this.isLoading = true;
       const newitem = {
         id: parseInt(this.id),
         name: this.product[0].name,
@@ -113,12 +75,48 @@ export default {
         quantity: this.quantity,
       };
       this.$store.commit("addToCart", newitem);
-    },
-    continueShopping() {
-      this.$router.push({ name: "Product" });
-    },
-    goToCart() {
-      this.$router.push({ name: "Cart" });
+
+      if (this.isLoading) {
+        swal({
+          icon: "info",
+          text: "Loading",
+          button: false,
+        });
+        if (this.order !== undefined) {
+          axios
+            .put(`${this.baseURL}cart/${this.order.id}`, {
+              items: this.$store.state.carts,
+              total: this.$store.getters.totalCost,
+            })
+            .then((res) => {
+              if (res.status == 200) {
+                this.isLoading = false;
+                swal({
+                  icon: "success",
+                  text: "add to cart success",
+                });
+                window.location.reload();
+              }
+            });
+        } else {
+          axios
+            .post(`${this.baseURL}cart`, {
+              items: this.$store.state.carts,
+              total: this.$store.getters.totalCost,
+              paid: false,
+            })
+            .then((res) => {
+              if (res.status == 201) {
+                this.isLoading = false;
+                swal({
+                  icon: "success",
+                  text: "add to cart success",
+                });
+                window.location.reload();
+              }
+            });
+        }
+      }
     },
   },
   mounted() {
